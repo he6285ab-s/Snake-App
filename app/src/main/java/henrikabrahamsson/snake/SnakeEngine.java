@@ -27,6 +27,8 @@ public class SnakeEngine extends Activity {
     GameView gameView;
     LinearLayout layout;
 
+    // hej
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
