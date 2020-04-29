@@ -8,13 +8,16 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -25,22 +28,64 @@ public class SnakeEngine extends Activity {
     // It will also hold the logic of the game
     // and respond to screen touches as well
     GameView gameView;
-    LinearLayout layout;
+    LinearLayout mainLayout;
+    LinearLayout topLayout;
+    TextView HSTextView;
+    TextView ScoreTextView;
 
-    // hej
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Initialize gameView and set it as the view
+        // Main layout for the entire screen
+        mainLayout = new LinearLayout(this);
+        mainLayout.setOrientation(LinearLayout.VERTICAL);
+        mainLayout.setGravity(Gravity.CENTER);
+
+        // Top layout for score keeping etc
+        topLayout = new LinearLayout(this);
+        HSTextView = new TextView(this);
+        ScoreTextView = new TextView(this);
+
+        LinearLayout.LayoutParams scoreLayoutParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+
+        LinearLayout.LayoutParams textViewParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+
+        scoreLayoutParams.setMargins(5, 5, 5, 20);
+        textViewParams.setMargins(20, 20, 20, 20);
+
+        topLayout.setLayoutParams(scoreLayoutParams);
+        topLayout.setOrientation(LinearLayout.HORIZONTAL);
+        topLayout.setGravity(Gravity.CENTER);
+        HSTextView.setLayoutParams(textViewParams);
+        ScoreTextView.setLayoutParams(textViewParams);
+
+        Typeface scoreTypeFace = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD);
+
+        HSTextView.setTypeface(scoreTypeFace);
+        HSTextView.setTextColor(Color.BLACK);
+        ScoreTextView.setTypeface(scoreTypeFace);
+        ScoreTextView.setTextColor(Color.BLACK);
+
+
+        topLayout.addView(HSTextView);
+        topLayout.addView(ScoreTextView);
+
+        // Initialize the view for the game
         gameView = new GameView(this);
         gameView.setLayoutParams(new LinearLayout.LayoutParams(getScreenWidth(),getScreenHeight() * 2 / 3));
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setGravity(Gravity.CENTER);
-        layout.addView(gameView);
-        setContentView(layout);
+
+        mainLayout.addView(topLayout);
+        mainLayout.addView(gameView);
+        setContentView(mainLayout);
+
 
     }
 
@@ -48,7 +93,6 @@ public class SnakeEngine extends Activity {
     // Notice we implement runnable so we have
     // A thread and can override the run method.
     class GameView extends SurfaceView implements Runnable {
-
 
         // General stuff
         Thread gameThread = null;
@@ -88,13 +132,13 @@ public class SnakeEngine extends Activity {
         float touchY;
         int SCREEN_WIDTH;
         int SCREEN_HEIGHT;
-        int blocksize;
+        int blockSize;
         int paddingVertical;
         int paddingHorizontal;
 
         boolean calculateDimensions = true;
 
-
+        /** Constructor for the view used for the actual snake game. */
         public GameView(Context context) {
 
             // Super context to the SurfaceView
@@ -106,9 +150,7 @@ public class SnakeEngine extends Activity {
             random = new Random();
 
             nextFrameTime = System.currentTimeMillis();
-
-            blocksize = 50;
-
+            blockSize = 50;
 
             // Set up a new game
             newGame();
@@ -121,28 +163,30 @@ public class SnakeEngine extends Activity {
 
         @Override
         public void run() {
-
             while (playing) {
                 if (UpdateRequired()) {
                     update();
                     draw();
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            ScoreTextView.setText(getString(R.string.score, score));
+                        }
+                    });
+
                 }
-
             }
-
         }
 
 
         /** Starts a new game, resetting the score and the snake. Also stores the highscore. */
         public void newGame() {
-
             spawnBlob();
-
             snakeX.clear();
             snakeY.clear();
             snakeX.add(16 / 2);
             snakeY.add(16 / 2);
-
             direction = "";
 
             SharedPreferences preferences = getContext().getSharedPreferences("Preferences", 0);
@@ -155,12 +199,23 @@ public class SnakeEngine extends Activity {
 
             }
 
-
-            highscore = preferences.getInt("Highscore", -1);
+            if(preferences.contains("Highscore")) {
+                highscore = preferences.getInt("Highscore", -1);
+            } else {
+                highscore = 0;
+            }
 
             snakeLength = 1;
             score = 0;
             scorelastframe = 0;
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    HSTextView.setText(getString(R.string.highscore, highscore));
+                    ScoreTextView.setText(getString(R.string.score, score));
+                }
+            });
+
 
         }
 
@@ -176,7 +231,7 @@ public class SnakeEngine extends Activity {
                 newGame();
             }
 
-            if(score != scorelastframe) MILLIS_PER_SEC = 2500 - 50 * score;
+            if(score != scorelastframe && scorelastframe >= 20) MILLIS_PER_SEC = 2500 - 50 * score;
 
             if (playing) {
                 moveSnake();
@@ -208,7 +263,6 @@ public class SnakeEngine extends Activity {
 
         /** Resets the blob by removing it, updating the snake and spawning a new blob. */
         public void eatBlob() {
-            //blockPlayable(blobx, bloby, Colors.BACKGROUNDPLAYAREA);
             snakeX.add(snakeLength, snakeX.get(snakeLength - 1));
             snakeY.add(snakeLength, snakeY.get(snakeLength - 1));
             snakeLength++;
@@ -319,8 +373,6 @@ public class SnakeEngine extends Activity {
 
                 paint.setColor(Color.RED);
                 paint.setTextSize(50);
-                canvas.drawText("Score: " + score, 20, 80, paint);
-                canvas.drawText("High Score: " + highscore, 20, 160, paint);
 
                 drawPlayArea();
 
@@ -349,9 +401,9 @@ public class SnakeEngine extends Activity {
 
         private void blockPlayable(int x, int y, int color) {
             paint.setColor(color);
-            canvas.drawRect(new Rect(paddingHorizontal + x * blocksize, paddingVertical + y * blocksize,
-                    paddingHorizontal + x * blocksize + blocksize,
-                    paddingVertical + y * blocksize + blocksize), paint);
+            canvas.drawRect(new Rect(paddingHorizontal + x * blockSize, paddingVertical + y * blockSize,
+                    paddingHorizontal + x * blockSize + blockSize,
+                    paddingVertical + y * blockSize + blockSize), paint);
         }
 
         // If SnakeEngine Activity is paused/stopped
