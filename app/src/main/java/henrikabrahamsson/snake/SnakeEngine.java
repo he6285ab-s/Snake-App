@@ -18,73 +18,103 @@ import android.view.SurfaceView;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import java.util.ArrayList;
 import java.util.Random;
 
 public class SnakeEngine extends Activity {
 
-    // gameView will be the view of the game
-    // It will also hold the logic of the game
-    // and respond to screen touches as well
     GameView gameView;
     LinearLayout mainLayout;
     LinearLayout topLayout;
-    TextView HSTextView;
+    TextView HighScoreTextView;
     TextView ScoreTextView;
+    TextView HS;
+    TextView S;
+
+    int GAME_PX_HEIGHT;
+    int GAME_PX_WIDTH;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Main layout for the entire screen
+        // MAIN LAYOUT
         mainLayout = new LinearLayout(this);
         mainLayout.setOrientation(LinearLayout.VERTICAL);
         mainLayout.setGravity(Gravity.CENTER);
 
-        // Top layout for score keeping etc
+        // TOP LAYOUT
         topLayout = new LinearLayout(this);
-        HSTextView = new TextView(this);
+        // Pure text
+        HighScoreTextView = new TextView(this);
         ScoreTextView = new TextView(this);
+        // Actual score
+        HS = new TextView(this);
+        S = new TextView(this);
 
         LinearLayout.LayoutParams scoreLayoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
 
-        LinearLayout.LayoutParams textViewParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
+        LinearLayout.LayoutParams scoreTextParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+
+        LinearLayout.LayoutParams scoreParams = new LinearLayout.LayoutParams(
+                100,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
 
         scoreLayoutParams.setMargins(5, 5, 5, 20);
-        textViewParams.setMargins(20, 20, 20, 20);
+        scoreTextParams.setMargins(20, 20, 20, 20);
+        scoreParams.setMargins(20, 20, 20, 20);
 
         topLayout.setLayoutParams(scoreLayoutParams);
         topLayout.setOrientation(LinearLayout.HORIZONTAL);
         topLayout.setGravity(Gravity.CENTER);
-        HSTextView.setLayoutParams(textViewParams);
-        ScoreTextView.setLayoutParams(textViewParams);
+        HighScoreTextView.setLayoutParams(scoreTextParams);
+        ScoreTextView.setLayoutParams(scoreTextParams);
+        HS.setLayoutParams(scoreParams);
+        S.setLayoutParams(scoreParams);
 
-        Typeface scoreTypeFace = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD);
+        Typeface scoreTextTypeFace = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL);
+        Typeface scoreTypeFace = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD_ITALIC);
 
-        HSTextView.setTypeface(scoreTypeFace);
-        HSTextView.setTextColor(Color.BLACK);
-        ScoreTextView.setTypeface(scoreTypeFace);
+        HighScoreTextView.setTypeface(scoreTextTypeFace);
+        HighScoreTextView.setTextColor(Color.BLACK);
+        HighScoreTextView.setText("High score:");
+
+        ScoreTextView.setTypeface(scoreTextTypeFace);
         ScoreTextView.setTextColor(Color.BLACK);
+        ScoreTextView.setText("Score:");
 
+        HS.setTypeface(scoreTypeFace);
+        HS.setTextColor(Color.YELLOW);
+        HS.setGravity(Gravity.CENTER);
 
-        topLayout.addView(HSTextView);
+        S.setTypeface(scoreTypeFace);
+        S.setTextColor(Color.YELLOW);
+        S.setGravity(Gravity.CENTER);
+
+        topLayout.addView(HighScoreTextView);
+        topLayout.addView(HS);
         topLayout.addView(ScoreTextView);
+        topLayout.addView(S);
 
         // Initialize the view for the game
+        GAME_PX_WIDTH = getScreenWidth();
+        GAME_PX_HEIGHT = getScreenHeight() * 2 / 3;
         gameView = new GameView(this);
-        gameView.setLayoutParams(new LinearLayout.LayoutParams(getScreenWidth(),getScreenHeight() * 2 / 3));
+        gameView.setLayoutParams(new LinearLayout.LayoutParams(GAME_PX_WIDTH, GAME_PX_HEIGHT));
 
         mainLayout.addView(topLayout);
         mainLayout.addView(gameView);
         setContentView(mainLayout);
+
+        mainLayout.setBackgroundColor(Color.RED);
 
 
     }
@@ -99,21 +129,17 @@ public class SnakeEngine extends Activity {
         SurfaceHolder ourHolder;
         Random random;
 
-
         // Determines if the game is running or not
         volatile boolean playing;
-
 
         // A Canvas and a Paint object
         Canvas canvas;
         Paint paint;
 
-
         // Frame rate
         private final long FPS = 10;
         private long MILLIS_PER_SEC = 2500;
         private long nextFrameTime;
-
 
         // Actually game related
         int blobx;
@@ -126,13 +152,12 @@ public class SnakeEngine extends Activity {
         ArrayList<Integer> snakeX = new ArrayList<>();
         ArrayList<Integer> snakeY = new ArrayList<>();
 
-
         // Screen and input related
         float touchX;
         float touchY;
-        int SCREEN_WIDTH;
-        int SCREEN_HEIGHT;
-        int blockSize;
+        int BLOCKSIZE;
+        int GAME_BLOCK_WIDTH;
+        int GAME_BLOCK_HEIGHT;
         int paddingVertical;
         int paddingHorizontal;
 
@@ -150,13 +175,21 @@ public class SnakeEngine extends Activity {
             random = new Random();
 
             nextFrameTime = System.currentTimeMillis();
-            blockSize = 50;
+
+            // Screen and play area related calculations
+            GAME_BLOCK_WIDTH = 20;
+            BLOCKSIZE = GAME_PX_WIDTH / GAME_BLOCK_WIDTH;
+            GAME_BLOCK_HEIGHT = GAME_PX_HEIGHT / BLOCKSIZE;
+
+            paddingHorizontal = (GAME_PX_WIDTH - GAME_BLOCK_WIDTH * BLOCKSIZE) / 2;
+            paddingVertical = (GAME_PX_HEIGHT - GAME_BLOCK_HEIGHT * BLOCKSIZE) / 2;
 
             // Set up a new game
             newGame();
 
             // Start the game
             playing = true;
+
 
 
         }
@@ -171,7 +204,7 @@ public class SnakeEngine extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            ScoreTextView.setText(getString(R.string.score, score));
+                            S.setText(String.valueOf(score));
                         }
                     });
 
@@ -185,8 +218,8 @@ public class SnakeEngine extends Activity {
             spawnBlob();
             snakeX.clear();
             snakeY.clear();
-            snakeX.add(16 / 2);
-            snakeY.add(16 / 2);
+            snakeX.add(GAME_BLOCK_WIDTH / 2);
+            snakeY.add(GAME_BLOCK_HEIGHT / 2);
             direction = "";
 
             SharedPreferences preferences = getContext().getSharedPreferences("Preferences", 0);
@@ -195,7 +228,7 @@ public class SnakeEngine extends Activity {
                 SharedPreferences.Editor editor = preferences.edit();
 
                 editor.putInt("Highscore", score);
-                editor.commit();
+                editor.apply();
 
             }
 
@@ -208,11 +241,14 @@ public class SnakeEngine extends Activity {
             snakeLength = 1;
             score = 0;
             scorelastframe = 0;
+            MILLIS_PER_SEC = 2500;
+
+
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    HSTextView.setText(getString(R.string.highscore, highscore));
-                    ScoreTextView.setText(getString(R.string.score, score));
+                    HS.setText(String.valueOf(highscore));
+                    S.setText(String.valueOf(score));
                 }
             });
 
@@ -231,7 +267,11 @@ public class SnakeEngine extends Activity {
                 newGame();
             }
 
-            if(score != scorelastframe && scorelastframe >= 20) MILLIS_PER_SEC = 2500 - 50 * score;
+            if(score != scorelastframe && score <= 20) {
+                MILLIS_PER_SEC = 2500 - 50*score;
+            } else if(score != scorelastframe) {
+                MILLIS_PER_SEC = 1500;
+            }
 
             if (playing) {
                 moveSnake();
@@ -245,9 +285,9 @@ public class SnakeEngine extends Activity {
         public boolean detectDeath() {
 
             if (snakeX.get(0) < 0) return true;
-            if (snakeX.get(0) > 15) return true;
+            if (snakeX.get(0) >= GAME_BLOCK_WIDTH) return true;
             if (snakeY.get(0) < 0) return true;
-            if (snakeY.get(0) > 15) return true;
+            if (snakeY.get(0) >= GAME_BLOCK_HEIGHT) return true;
 
             if (snakeLength > 4) {
                 for (int i = 4; i < snakeLength; i++) {
@@ -276,8 +316,8 @@ public class SnakeEngine extends Activity {
             boolean blobReCalc;
             do {
 
-                blobx = random.nextInt(14) + 1;
-                bloby = random.nextInt(14) + 1;
+                blobx = random.nextInt(GAME_BLOCK_WIDTH - 2) + 1;
+                bloby = random.nextInt(GAME_BLOCK_HEIGHT - 2) + 1;
 
                 blobReCalc = false;
 
@@ -296,6 +336,7 @@ public class SnakeEngine extends Activity {
                     for (int i = 0; i < snakeLength; i++) {
                         if (snakeX.get(i) == blobx && snakeY.get(i) == bloby) {
                             blobReCalc = true;
+                            break;
                         }
                     }
                 }
@@ -359,17 +400,7 @@ public class SnakeEngine extends Activity {
                 // Setup
                 canvas = ourHolder.lockCanvas(); // Lock canvas
 
-                if(calculateDimensions) {
-                    SCREEN_HEIGHT = ourHolder.getSurfaceFrame().height();
-                    SCREEN_WIDTH = ourHolder.getSurfaceFrame().width();
-
-                    paddingHorizontal = (SCREEN_WIDTH - Constants.PLAYSIZE) / 2;
-                    paddingVertical = (SCREEN_HEIGHT - Constants.PLAYSIZE) / 2;
-
-                    calculateDimensions = false;
-                }
-
-                canvas.drawColor(Colors.BACKGROUNDNONPLAYAREA);
+                // canvas.drawColor(Colors.BACKGROUNDNONPLAYAREA);
 
                 paint.setColor(Color.RED);
                 paint.setTextSize(50);
@@ -380,7 +411,6 @@ public class SnakeEngine extends Activity {
 
                 if (!detectDeath()) {
                     for (int i = 0; i < snakeLength; i++) {
-
                         blockPlayable(snakeX.get(i), snakeY.get(i), Colors.SNAKE);
                     }
                 }
@@ -395,15 +425,16 @@ public class SnakeEngine extends Activity {
         private void drawPlayArea() {
 
             paint.setColor(Color.WHITE);
-            canvas.drawRect(new Rect(paddingHorizontal, paddingVertical, paddingHorizontal + Constants.PLAYSIZE, paddingVertical + Constants.PLAYSIZE), paint);
+            canvas.drawRect(new Rect(paddingHorizontal, paddingVertical, paddingHorizontal + GAME_BLOCK_WIDTH * BLOCKSIZE
+                    , paddingVertical + GAME_BLOCK_HEIGHT * BLOCKSIZE), paint);
 
         }
 
         private void blockPlayable(int x, int y, int color) {
             paint.setColor(color);
-            canvas.drawRect(new Rect(paddingHorizontal + x * blockSize, paddingVertical + y * blockSize,
-                    paddingHorizontal + x * blockSize + blockSize,
-                    paddingVertical + y * blockSize + blockSize), paint);
+            canvas.drawRect(new Rect(paddingHorizontal + x * BLOCKSIZE, paddingVertical + y * BLOCKSIZE,
+                    paddingHorizontal + x * BLOCKSIZE + BLOCKSIZE,
+                    paddingVertical + y * BLOCKSIZE + BLOCKSIZE), paint);
         }
 
         // If SnakeEngine Activity is paused/stopped
@@ -425,6 +456,8 @@ public class SnakeEngine extends Activity {
             gameThread = new Thread(this);
             gameThread.start();
         }
+
+        // TODO write new method for handling movement control
 
         @Override
         public boolean onTouchEvent(MotionEvent motionEvent) {
