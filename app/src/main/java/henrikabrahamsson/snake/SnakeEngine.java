@@ -114,7 +114,7 @@ public class SnakeEngine extends Activity {
         mainLayout.addView(gameView);
         setContentView(mainLayout);
 
-        mainLayout.setBackgroundColor(Color.RED);
+        mainLayout.setBackgroundColor(Color.BLUE);
 
 
     }
