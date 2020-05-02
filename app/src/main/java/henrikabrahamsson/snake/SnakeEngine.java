@@ -15,7 +15,9 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import java.util.ArrayList;
@@ -30,9 +32,13 @@ public class SnakeEngine extends Activity {
     TextView ScoreTextView;
     TextView HS;
     TextView S;
+    Button startButton;
 
-    int GAME_PX_HEIGHT;
+    int GAME_PX_PRELIMINARY_HEIGHT;
     int GAME_PX_WIDTH;
+    int BLOCKSIZE;
+    int GAME_BLOCK_WIDTH;
+    int GAME_BLOCK_HEIGHT;
 
 
     @Override
@@ -104,17 +110,30 @@ public class SnakeEngine extends Activity {
         topLayout.addView(ScoreTextView);
         topLayout.addView(S);
 
-        // Initialize the view for the game
+
+        // Screen and play area related calculations
         GAME_PX_WIDTH = getScreenWidth();
-        GAME_PX_HEIGHT = getScreenHeight() * 2 / 3;
+        GAME_PX_PRELIMINARY_HEIGHT = getScreenHeight() * 2 / 3;
+        GAME_BLOCK_WIDTH = 20;
+        BLOCKSIZE = GAME_PX_WIDTH / GAME_BLOCK_WIDTH;
+        GAME_BLOCK_HEIGHT = GAME_PX_PRELIMINARY_HEIGHT / BLOCKSIZE;
+
+        startButton = new Button(this);
+        startButton.setLayoutParams(scoreTextParams);
+        startButton.setText("Click here to start playing!");
+
+        // Initialize the view for the game
         gameView = new GameView(this);
-        gameView.setLayoutParams(new LinearLayout.LayoutParams(GAME_PX_WIDTH, GAME_PX_HEIGHT));
+        gameView.setLayoutParams(new LinearLayout.LayoutParams(GAME_BLOCK_WIDTH * BLOCKSIZE, GAME_BLOCK_HEIGHT * BLOCKSIZE));
+
 
         mainLayout.addView(topLayout);
         mainLayout.addView(gameView);
+        mainLayout.addView(startButton);
         setContentView(mainLayout);
 
         mainLayout.setBackgroundColor(Color.BLUE);
+
 
 
     }
@@ -155,9 +174,7 @@ public class SnakeEngine extends Activity {
         // Screen and input related
         float touchX;
         float touchY;
-        int BLOCKSIZE;
-        int GAME_BLOCK_WIDTH;
-        int GAME_BLOCK_HEIGHT;
+
         int paddingVertical;
         int paddingHorizontal;
 
@@ -175,14 +192,6 @@ public class SnakeEngine extends Activity {
             random = new Random();
 
             nextFrameTime = System.currentTimeMillis();
-
-            // Screen and play area related calculations
-            GAME_BLOCK_WIDTH = 20;
-            BLOCKSIZE = GAME_PX_WIDTH / GAME_BLOCK_WIDTH;
-            GAME_BLOCK_HEIGHT = GAME_PX_HEIGHT / BLOCKSIZE;
-
-            paddingHorizontal = (GAME_PX_WIDTH - GAME_BLOCK_WIDTH * BLOCKSIZE) / 2;
-            paddingVertical = (GAME_PX_HEIGHT - GAME_BLOCK_HEIGHT * BLOCKSIZE) / 2;
 
             // Set up a new game
             newGame();
@@ -249,6 +258,12 @@ public class SnakeEngine extends Activity {
                 public void run() {
                     HS.setText(String.valueOf(highscore));
                     S.setText(String.valueOf(score));
+                    startButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            direction = "right";
+                        }
+                    });
                 }
             });
 
@@ -459,6 +474,49 @@ public class SnakeEngine extends Activity {
 
         // TODO write new method for handling movement control
 
+
+        @Override
+        public boolean onTouchEvent(MotionEvent motionEvent) {
+
+            // Ignore MotionEvent if it was not a push on the screen
+            if(motionEvent.getAction() != MotionEvent.ACTION_DOWN) {
+                return false;
+            }
+
+
+            // Get the x and y coordinates of the finger when it was removed from the screen
+            float x = motionEvent.getX();
+            float y = motionEvent.getY();
+
+            switch (direction) {
+
+                case "up":
+                case "down":
+                   if(x < snakeX.get(0) * BLOCKSIZE) {
+                       direction = "left";
+                   } else {
+                       direction = "right";
+                   }
+                   break;
+
+                case "right":
+                case "left":
+                   if(y < gameView.getBottom() + snakeY.get(0) * BLOCKSIZE) {
+                       direction = "down";
+                   } else {
+                       direction = "up";
+                   }
+                   break;
+            }
+
+
+
+            return true;
+        }
+
+
+
+        /*
         @Override
         public boolean onTouchEvent(MotionEvent motionEvent) {
 
@@ -521,8 +579,13 @@ public class SnakeEngine extends Activity {
             return true;
         }
 
+        */
+
 
     }
+
+
+
 
 
     // This method executes when the player starts the game
