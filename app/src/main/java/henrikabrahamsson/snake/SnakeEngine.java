@@ -20,6 +20,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -478,6 +480,8 @@ public class SnakeEngine extends Activity {
         @Override
         public boolean onTouchEvent(MotionEvent motionEvent) {
 
+            int BUFFER = 60;
+
             // Ignore MotionEvent if it was not a push on the screen
             if(motionEvent.getAction() != MotionEvent.ACTION_DOWN) {
                 return false;
@@ -492,19 +496,19 @@ public class SnakeEngine extends Activity {
 
                 case "up":
                 case "down":
-                   if(x < snakeX.get(0) * BLOCKSIZE) {
+                   if (x < snakeX.get(0) * BLOCKSIZE - BUFFER) {
                        direction = "left";
-                   } else {
+                   } else if (x > snakeX.get(0) * BLOCKSIZE + BUFFER) {
                        direction = "right";
                    }
                    break;
 
                 case "right":
                 case "left":
-                   if(y < gameView.getBottom() + snakeY.get(0) * BLOCKSIZE) {
-                       direction = "down";
-                   } else {
+                   if (y < snakeY.get(0) * BLOCKSIZE - BUFFER) {
                        direction = "up";
+                   } else if (y > snakeY.get(0) * BLOCKSIZE + BUFFER) {
+                       direction = "down";
                    }
                    break;
             }
