@@ -5,6 +5,9 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.widget.LinearLayout;
 
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
+
 public class Main extends Activity {
 
     SnakeView snakeView;
@@ -18,6 +21,8 @@ public class Main extends Activity {
         snakeView = new SnakeView(this, mainInterface);
 
         setContentView(mainInterface);
+
+
 
     }
 

@@ -9,6 +9,11 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
+
+import java.util.logging.Handler;
+
 public class MainInterface extends LinearLayout {
 
     LinearLayout topLayout;
@@ -25,7 +30,7 @@ public class MainInterface extends LinearLayout {
     int GAME_BLOCK_HEIGHT;
 
 
-    public MainInterface(Context context, int width, int height)  {
+    public MainInterface(Context context, int width, int height) {
         super(context);
 
         // SnakeView area calculations
@@ -81,11 +86,11 @@ public class MainInterface extends LinearLayout {
         Typeface scoreTypeFace = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD_ITALIC);
 
         HighScoreTextView.setTypeface(scoreTextTypeFace);
-        HighScoreTextView.setTextColor(Color.BLACK);
+        HighScoreTextView.setTextColor(Color.WHITE);
         HighScoreTextView.setText("High score:");
 
         ScoreTextView.setTypeface(scoreTextTypeFace);
-        ScoreTextView.setTextColor(Color.BLACK);
+        ScoreTextView.setTextColor(Color.WHITE);
         ScoreTextView.setText("Score:");
 
         HS.setTypeface(scoreTypeFace);
@@ -94,6 +99,7 @@ public class MainInterface extends LinearLayout {
 
         S.setTypeface(scoreTypeFace);
         S.setTextColor(Color.YELLOW);
+        S.setTextSize(40);
         S.setGravity(Gravity.CENTER);
 
         topLayout.addView(HighScoreTextView);
@@ -105,10 +111,12 @@ public class MainInterface extends LinearLayout {
         startButton.setLayoutParams(scoreTextParams);
         startButton.setText("Click here to start playing!");
 
+
+
         this.addView(topLayout);
         this.addView(startButton);
 
-        this.setBackgroundColor(Color.BLUE);
+        this.setBackgroundColor(Colors.BACKGROUNDNONPLAYAREA);
 
 
     }
@@ -116,9 +124,6 @@ public class MainInterface extends LinearLayout {
     public void setGameView(SnakeView snakeView) {
         this.addView(snakeView, 1);
     }
-
-
-
 
 
 }

@@ -6,12 +6,16 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.Handler;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.LinearLayout;
+
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -97,7 +101,24 @@ public class SnakeView extends SurfaceView implements Runnable {
                 update();
                 draw();
 
-                mainInterface.S.setText(String.valueOf(score));
+                final String lastScore = mainInterface.S.getText().toString();
+
+                if (super.getHandler() != null) {
+                    super.getHandler().post(new Runnable() {
+                        @Override
+                        public void run() {
+                            mainInterface.S.setText(String.valueOf(score));
+
+                            if (lastScore != mainInterface.S.getText().toString() && score % 5 == 0) {
+                                YoYo.with(Techniques.Pulse).duration(1000).repeat(50).playOn(mainInterface.S);
+
+                            }
+
+
+                        }
+                    });
+                }
+
 
             }
         }
@@ -137,15 +158,25 @@ public class SnakeView extends SurfaceView implements Runnable {
         MILLIS_PER_SEC = 2500;
 
 
+        // Issue with not being able to start game now
 
-        mainInterface.HS.setText(String.valueOf(highscore));
-        mainInterface.S.setText(String.valueOf(score));
-        mainInterface.startButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                direction = "right";
-            }
-        });
+        if (super.getHandler() != null) {
+            super.getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    mainInterface.HS.setText(String.valueOf(highscore));
+                    mainInterface.S.setText(String.valueOf(score));
+                    mainInterface.startButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            direction = "right";
+                        }
+                    });
+                }
+            });
+        }
+
+
 
 
     }
@@ -335,9 +366,9 @@ public class SnakeView extends SurfaceView implements Runnable {
 
     private void drawPlayArea() {
 
-        paint.setColor(Color.WHITE);
+        paint.setColor(Colors.BACKGROUNDPLAYAREA);
         canvas.drawRect(new Rect(paddingHorizontal, paddingVertical, paddingHorizontal + mainInterface.GAME_BLOCK_WIDTH * mainInterface.BLOCKSIZE
-                , paddingVertical +mainInterface. GAME_BLOCK_HEIGHT * mainInterface.BLOCKSIZE), paint);
+                , paddingVertical + mainInterface.GAME_BLOCK_HEIGHT * mainInterface.BLOCKSIZE), paint);
 
     }
 
