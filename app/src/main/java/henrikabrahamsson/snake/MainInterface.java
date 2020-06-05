@@ -1,27 +1,28 @@
 package henrikabrahamsson.snake;
 
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Path;
 import android.graphics.Typeface;
+import android.os.Handler;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import com.daimajia.androidanimations.library.Techniques;
-import com.daimajia.androidanimations.library.YoYo;
-
-import java.util.logging.Handler;
+import android.widget.Toast;
 
 public class MainInterface extends LinearLayout {
 
-    LinearLayout topLayout;
-    TextView HighScoreTextView;
-    TextView ScoreTextView;
-    TextView HS;
-    TextView S;
+    LinearLayout scorefield;
+    TextView highScoreText;
+    TextView scoreText;
+    TextView highScoreNumber;
+    TextView scoreNumber;
     Button startButton;
+    SnakeView snakeView;
 
     int GAME_PX_HEIGHT;
     int GAME_PX_WIDTH;
@@ -45,75 +46,99 @@ public class MainInterface extends LinearLayout {
 
 
         // TOP LAYOUT
-        topLayout = new LinearLayout(context);
+        scorefield = new LinearLayout(context);
 
         // Pure text
-        HighScoreTextView = new TextView(context);
-        ScoreTextView = new TextView(context);
+        highScoreText = new TextView(context);
+        scoreText = new TextView(context);
 
         // Actual score
-        HS = new TextView(context);
-        S = new TextView(context);
+        highScoreNumber = new TextView(context);
+        scoreNumber = new TextView(context);
 
-        LinearLayout.LayoutParams scoreLayoutParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams scoreFieldParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
 
-        LinearLayout.LayoutParams scoreTextParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams textparams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
 
         LinearLayout.LayoutParams scoreParams = new LinearLayout.LayoutParams(
-                100,
+                150,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
 
-        scoreLayoutParams.setMargins(5, 5, 5, 20);
-        scoreTextParams.setMargins(20, 20, 20, 20);
+        scoreFieldParams.setMargins(5, 5, 5, 20);
+        textparams.setMargins(20, 20, 20, 20);
         scoreParams.setMargins(20, 20, 20, 20);
 
-        topLayout.setLayoutParams(scoreLayoutParams);
-        topLayout.setOrientation(LinearLayout.HORIZONTAL);
-        topLayout.setGravity(Gravity.CENTER);
-        HighScoreTextView.setLayoutParams(scoreTextParams);
-        ScoreTextView.setLayoutParams(scoreTextParams);
-        HS.setLayoutParams(scoreParams);
-        S.setLayoutParams(scoreParams);
+        scorefield.setLayoutParams(scoreFieldParams);
+        scorefield.setOrientation(LinearLayout.HORIZONTAL);
+        scorefield.setGravity(Gravity.CENTER);
+        highScoreText.setLayoutParams(textparams);
+        scoreText.setLayoutParams(textparams);
+        highScoreNumber.setLayoutParams(scoreParams);
+        scoreNumber.setLayoutParams(scoreParams);
 
         Typeface scoreTextTypeFace = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL);
         Typeface scoreTypeFace = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD_ITALIC);
 
-        HighScoreTextView.setTypeface(scoreTextTypeFace);
-        HighScoreTextView.setTextColor(Color.WHITE);
-        HighScoreTextView.setText("High score:");
+        highScoreText.setTypeface(scoreTextTypeFace);
+        highScoreText.setTextColor(Color.WHITE);
+        highScoreText.setText("High score:");
 
-        ScoreTextView.setTypeface(scoreTextTypeFace);
-        ScoreTextView.setTextColor(Color.WHITE);
-        ScoreTextView.setText("Score:");
+        scoreText.setTypeface(scoreTextTypeFace);
+        scoreText.setTextColor(Color.WHITE);
+        scoreText.setText("Score:");
 
-        HS.setTypeface(scoreTypeFace);
-        HS.setTextColor(Color.YELLOW);
-        HS.setGravity(Gravity.CENTER);
+        highScoreNumber.setTypeface(scoreTypeFace);
+        highScoreNumber.setTextColor(Color.YELLOW);
+        highScoreNumber.setTextSize(30);
+        highScoreNumber.setGravity(Gravity.CENTER);
 
-        S.setTypeface(scoreTypeFace);
-        S.setTextColor(Color.YELLOW);
-        S.setTextSize(40);
-        S.setGravity(Gravity.CENTER);
+        scoreNumber.setTypeface(scoreTypeFace);
+        scoreNumber.setTextColor(Color.YELLOW);
+        scoreNumber.setTextSize(30);
+        scoreNumber.setGravity(Gravity.CENTER);
 
-        topLayout.addView(HighScoreTextView);
-        topLayout.addView(HS);
-        topLayout.addView(ScoreTextView);
-        topLayout.addView(S);
+        scorefield.addView(highScoreText);
+        scorefield.addView(highScoreNumber);
+        scorefield.addView(scoreText);
+        scorefield.addView(scoreNumber);
+
+        LinearLayout buttonField = new LinearLayout(context);
+        buttonField.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        buttonField.setOrientation(HORIZONTAL);
+        buttonField.setGravity(Gravity.CENTER);
+
+        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(240, 240);
+        buttonParams.setMargins(30, 70, 30, 0);
 
         startButton = new Button(context);
-        startButton.setLayoutParams(scoreTextParams);
-        startButton.setText("Click here to start playing!");
+        startButton.setLayoutParams(buttonParams);
+        startButton.setBackgroundResource(R.drawable.ic_play_circle_outline_white_24dp);
 
 
 
-        this.addView(topLayout);
+        startButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(snakeView.playing) {
+                    snakeView.pause();
+                    startButton.setBackgroundResource(R.drawable.ic_play_circle_outline_white_24dp);
+                } else {
+                    snakeView.resume();
+                    startButton.setBackgroundResource(R.drawable.ic_pause_circle_outline_white_24dp);
+                }
+            }
+        });
+
+
+
+        this.addView(scorefield);
         this.addView(startButton);
 
         this.setBackgroundColor(Colors.BACKGROUNDNONPLAYAREA);
@@ -122,7 +147,40 @@ public class MainInterface extends LinearLayout {
     }
 
     public void setGameView(SnakeView snakeView) {
+        this.snakeView = snakeView;
         this.addView(snakeView, 1);
+    }
+
+    public void animateEatenApple(int x, int y) {
+
+        View apple = new View(getContext());
+        apple.setLayoutParams(new LayoutParams(BLOCKSIZE, BLOCKSIZE));
+        apple.setBackgroundColor(Colors.APPLE);
+        apple.setX(x);
+        apple.setY(y);
+
+        Path path = new Path();
+        path.lineTo(scoreNumber.getX(), scoreNumber.getY());
+
+        final ObjectAnimator objectAnimator = ObjectAnimator.ofFloat(apple, View.X, View.Y, path);
+        objectAnimator.setDuration(1000);
+
+        this.addView(apple);
+
+        super.getHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getContext(), "running animation", Toast.LENGTH_LONG).show();
+                objectAnimator.start();
+            }
+        });
+
+        this.removeView(apple);
+
+
+
+
+
     }
 
 

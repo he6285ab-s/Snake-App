@@ -6,12 +6,10 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.os.Handler;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 import android.widget.LinearLayout;
 
 import com.daimajia.androidanimations.library.Techniques;
@@ -97,20 +95,20 @@ public class SnakeView extends SurfaceView implements Runnable {
     @Override
     public void run() {
         while (playing) {
-            if (UpdateRequired()) {
+            if (updateRequired()) {
                 update();
                 draw();
 
-                final String lastScore = mainInterface.S.getText().toString();
+                final String lastScore = mainInterface.scoreNumber.getText().toString();
 
                 if (super.getHandler() != null) {
                     super.getHandler().post(new Runnable() {
                         @Override
                         public void run() {
-                            mainInterface.S.setText(String.valueOf(score));
+                            mainInterface.scoreNumber.setText(String.valueOf(score));
 
-                            if (lastScore != mainInterface.S.getText().toString() && score % 5 == 0) {
-                                YoYo.with(Techniques.Pulse).duration(1000).repeat(50).playOn(mainInterface.S);
+                            if (lastScore != mainInterface.scoreNumber.getText().toString() && score % 5 == 0) {
+                                YoYo.with(Techniques.Pulse).duration(500).repeat(2).playOn(mainInterface.scoreNumber);
 
                             }
 
@@ -157,26 +155,8 @@ public class SnakeView extends SurfaceView implements Runnable {
         scorelastframe = 0;
         MILLIS_PER_SEC = 2500;
 
-
-        // Issue with not being able to start game now
-
-        if (super.getHandler() != null) {
-            super.getHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    mainInterface.HS.setText(String.valueOf(highscore));
-                    mainInterface.S.setText(String.valueOf(score));
-                    mainInterface.startButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            direction = "right";
-                        }
-                    });
-                }
-            });
-        }
-
-
+        direction = "none";
+        mainInterface.highScoreNumber.setText(String.valueOf(highscore));
 
 
     }
@@ -241,6 +221,8 @@ public class SnakeView extends SurfaceView implements Runnable {
         spawnBlob();
         score++;
 
+        mainInterface.animateEatenApple(snakeX.get(0) * mainInterface.BLOCKSIZE, snakeY.get(0) * mainInterface.BLOCKSIZE + mainInterface.scorefield.getHeight());
+
     }
 
     /**
@@ -289,6 +271,8 @@ public class SnakeView extends SurfaceView implements Runnable {
      */
     public void moveSnake() {
 
+        if (direction == "none") return;
+
         for (int i = snakeLength - 1; i > 0; i--) {
             snakeX.set(i, snakeX.get(i - 1));
             snakeY.set(i, snakeY.get(i - 1));
@@ -316,7 +300,7 @@ public class SnakeView extends SurfaceView implements Runnable {
     /**
      * Determines if it is time to update the frame.
      */
-    public boolean UpdateRequired() {
+    public boolean updateRequired() {
 
         // Are we due to update the frame
         if (nextFrameTime <= System.currentTimeMillis()) {
@@ -334,6 +318,8 @@ public class SnakeView extends SurfaceView implements Runnable {
     }
 
 
+    // ------------ DRAWING ----------
+
     public void draw() {
 
         // Make sure our drawing surface is valid or we crash
@@ -349,7 +335,7 @@ public class SnakeView extends SurfaceView implements Runnable {
 
             drawPlayArea();
 
-            blockPlayable(blobx, bloby, Colors.BLOB);
+            blockPlayable(blobx, bloby, Colors.APPLE);
 
             if (!detectDeath()) {
                 for (int i = 0; i < snakeLength; i++) {
@@ -379,6 +365,9 @@ public class SnakeView extends SurfaceView implements Runnable {
                 paddingVertical + y * mainInterface.BLOCKSIZE + mainInterface.BLOCKSIZE), paint);
     }
 
+
+    // --------- STATE RELATED ---------
+
     // If SnakeEngine Activity is paused/stopped
     // shutdown our thread.
     public void pause() {
@@ -399,8 +388,8 @@ public class SnakeView extends SurfaceView implements Runnable {
         gameThread.start();
     }
 
-    // TODO write new method for handling movement control
 
+    // ----------- TOUCH EVENTS -----------
 
     @Override
     public boolean onTouchEvent(MotionEvent motionEvent) {
@@ -419,6 +408,9 @@ public class SnakeView extends SurfaceView implements Runnable {
 
         switch (direction) {
 
+            case "none":
+                direction = "right";
+                break;
             case "up":
             case "down":
                 if (x < snakeX.get(0) * mainInterface.BLOCKSIZE - BUFFER) {
@@ -444,6 +436,3 @@ public class SnakeView extends SurfaceView implements Runnable {
 
 
 }
-
-
-
