@@ -12,9 +12,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.LinearLayout;
 
-import com.daimajia.androidanimations.library.Techniques;
-import com.daimajia.androidanimations.library.YoYo;
-
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -94,29 +91,26 @@ public class SnakeView extends SurfaceView implements Runnable {
 
     @Override
     public void run() {
+
+        /*
+        if (super.getHandler() != null) {
+            super.getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    mainInterface.scoreNumber.setText(String.valueOf(score));
+
+
+                }
+            });
+        }
+
+         */
+
+
         while (playing) {
             if (updateRequired()) {
                 update();
                 draw();
-
-                final String lastScore = mainInterface.scoreNumber.getText().toString();
-
-                if (super.getHandler() != null) {
-                    super.getHandler().post(new Runnable() {
-                        @Override
-                        public void run() {
-                            mainInterface.scoreNumber.setText(String.valueOf(score));
-
-                            if (lastScore != mainInterface.scoreNumber.getText().toString() && score % 5 == 0) {
-                                YoYo.with(Techniques.Pulse).duration(500).repeat(2).playOn(mainInterface.scoreNumber);
-
-                            }
-
-
-                        }
-                    });
-                }
-
 
             }
         }
@@ -173,6 +167,7 @@ public class SnakeView extends SurfaceView implements Runnable {
 
         if (detectDeath()) {
             newGame();
+            mainInterface.resetScore();
         }
 
         if (score != scorelastframe && score <= 20) {
@@ -410,6 +405,7 @@ public class SnakeView extends SurfaceView implements Runnable {
 
             case "none":
                 direction = "right";
+                mainInterface.setButtonToPlayingState();
                 break;
             case "up":
             case "down":

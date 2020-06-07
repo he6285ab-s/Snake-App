@@ -1,18 +1,27 @@
 package henrikabrahamsson.snake;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.Typeface;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
 
 public class MainInterface extends LinearLayout {
 
@@ -23,12 +32,14 @@ public class MainInterface extends LinearLayout {
     TextView scoreNumber;
     Button startButton;
     SnakeView snakeView;
-
+    View apple;
     int GAME_PX_HEIGHT;
     int GAME_PX_WIDTH;
     int BLOCKSIZE;
     int GAME_BLOCK_WIDTH;
     int GAME_BLOCK_HEIGHT;
+    Handler mainHandler;
+
 
 
     public MainInterface(Context context, int width, int height) {
@@ -103,6 +114,7 @@ public class MainInterface extends LinearLayout {
         scoreNumber.setTextColor(Color.YELLOW);
         scoreNumber.setTextSize(30);
         scoreNumber.setGravity(Gravity.CENTER);
+        scoreNumber.setText("0");
 
         scorefield.addView(highScoreText);
         scorefield.addView(highScoreNumber);
@@ -137,11 +149,17 @@ public class MainInterface extends LinearLayout {
         });
 
 
-
         this.addView(scorefield);
         this.addView(startButton);
 
         this.setBackgroundColor(Colors.BACKGROUNDNONPLAYAREA);
+
+        mainHandler = new Handler(Looper.getMainLooper());
+
+        apple = new View(context);
+        apple.setBackgroundColor(Colors.APPLE);
+        apple.setVisibility(INVISIBLE);
+        getOverlay().add(apple);
 
 
     }
@@ -151,37 +169,72 @@ public class MainInterface extends LinearLayout {
         this.addView(snakeView, 1);
     }
 
-    public void animateEatenApple(int x, int y) {
+    public void animateEatenApple(final int x, int y) {
 
-        View apple = new View(getContext());
-        apple.setLayoutParams(new LayoutParams(BLOCKSIZE, BLOCKSIZE));
-        apple.setBackgroundColor(Colors.APPLE);
-        apple.setX(x);
-        apple.setY(y);
-
-        Path path = new Path();
-        path.lineTo(scoreNumber.getX(), scoreNumber.getY());
-
-        final ObjectAnimator objectAnimator = ObjectAnimator.ofFloat(apple, View.X, View.Y, path);
-        objectAnimator.setDuration(1000);
-
-        this.addView(apple);
-
-        super.getHandler().post(new Runnable() {
+        mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(getContext(), "running animation", Toast.LENGTH_LONG).show();
-                objectAnimator.start();
+
+                int x = snakeView.snakeX.get(0);
+                int y = snakeView.snakeY.get(0);
+
+                apple.layout(x, y, x + BLOCKSIZE, y + BLOCKSIZE);
+
+                apple.setX(x * BLOCKSIZE);
+                apple.setY(y * BLOCKSIZE + scorefield.getHeight());
+
+                apple.setVisibility(VISIBLE);
+
+                Log.d("x", "" + apple.getX());
+
+                apple.animate().x(scoreNumber.getX() + (float) scoreNumber.getWidth() / 2).y(scoreNumber.getY() + (float) scoreNumber.getHeight());
+                apple.animate().setDuration(1000);
+                apple.animate().start();
+
+                apple.animate().setListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animator) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animator) {
+                        apple.setVisibility(INVISIBLE);
+
+                        scoreNumber.setText(Integer.toString(snakeView.score));
+                        if(snakeView.score % 5 == 0) {
+                            YoYo.with(Techniques.Pulse).duration(500).repeat(2).playOn(scoreNumber);
+                        }
+
+
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animator) {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animator) {
+
+                    }
+                });
+
+
+
             }
         });
-
-        this.removeView(apple);
-
-
-
 
 
     }
 
+
+    public void setButtonToPlayingState() {
+        startButton.setBackgroundResource(R.drawable.ic_pause_circle_outline_white_24dp);
+    }
+
+    public void resetScore() {
+        scoreNumber.setText(Integer.toString(snakeView.score));
+    }
 
 }
